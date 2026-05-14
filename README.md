@@ -41,6 +41,48 @@ Use the docker-config-qa-regression skill to verify my last compose change
 Use ssh-docker-remote-config-management to update a Telegram bot env var
 ```
 
+## Verify install worked
+
+In a fresh Claude Code session:
+
+- Type `/docker-config-qa-regression` — autocomplete should suggest the skill.
+- Or ask: *"verify my last docker-compose change"* — Claude should pick up the skill by description match.
+- All three skills should show in `/help skills`.
+
+If none of those work, see **Troubleshooting** below.
+
+## Example output
+
+Abbreviated `/docker-config-qa-regression` run after editing `docker-compose.yml`:
+
+```
+Running 6-phase regression check on docker-compose.yml…
+
+Phase 1 — Syntax: `docker compose config` passed ✓
+Phase 2 — Volume mounts:
+  - /app/data → ./data ✓ (host dir exists, writable)
+  - /etc/myapp/config.json → ./config.json ✗ HOST FILE MISSING
+    → Container will start with default config; persistence will silently fail.
+Phase 3 — Env vars:
+  - DATABASE_URL set ✓
+  - REDIS_URL set ✓
+  - SENTRY_DSN NOT set (referenced in app/sentry.ts:12) ⚠ optional
+Phase 4 — Ports: 3000:3000 ✓ no conflict on host
+Phase 5 — Healthcheck: defined, 30s interval ✓
+Phase 6 — Restart policy: unless-stopped ✓
+
+Verdict: 1 BLOCKER (Phase 2 volume mount). Fix before `docker compose up -d`.
+```
+
+The pattern: each phase has a specific check and a specific failure mode. The output tells you *exactly* what to fix — not just "something is broken."
+
+## Troubleshooting
+
+- **Skill doesn't autocomplete:** confirm files landed at `~/.claude/skills/<name>.md` (flat). Skills with directory layout (`~/.claude/skills/<name>/SKILL.md`) also work, but pick one.
+- **Skill doesn't auto-invoke on task description:** mention the skill name explicitly. The description-matching is fuzzy; explicit names are reliable.
+- **`docker-ephemeral-volume-fix` produces a long checklist but no fix:** that's expected — the skill diagnoses the pattern, then prescribes the volume mount you need to add. The fix is one line in `docker-compose.yml`; the diagnostic walks you to it.
+- **`ssh-docker-remote-config-management` quoting still breaks:** the skill's pipe-and-copy pattern needs you to be on the remote host already, not running `ssh user@host 'docker exec ...'` from local. Read the skill's "Anti-pattern" section.
+
 ## Pattern: how to extract your own learned skills
 
 If you want to do this yourself, the recipe:
