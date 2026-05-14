@@ -64,6 +64,7 @@ Part of my Claude Code config series:
 - [`claude-code-deep-review`](https://github.com/aksheyw/claude-code-deep-review) — 14-lens iterative review skill
 - [`claude-code-pm-agents`](https://github.com/aksheyw/claude-code-pm-agents) — 7 product-builder subagents
 - [`claude-code-rules`](https://github.com/aksheyw/claude-code-rules) — opinionated global rules
+- [`career-command-center-template`](https://github.com/aksheyw/career-command-center-template) — full plugin template for an AI-native job-search workflow (10 skills, 5 personal-data skeletons, hooks)
 
 ## License
 
