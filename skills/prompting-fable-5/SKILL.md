@@ -1,76 +1,63 @@
 ---
 name: prompting-fable-5
-description: How to prompt and scaffold Claude Fable 5 / Mythos 5 — effort levels, long-horizon runs, parallel subagents, memory, the send-to-user tool, and (critically) the safety classifiers that silently bounce sessions to Opus 4.8. Use when starting Fable-5 work, migrating skills/prompts from Opus, running security/bio-adjacent reviews, or diagnosing a session that keeps falling back to Opus.
+description: How to prompt and scaffold Claude Fable 5 / Mythos 5 — effort levels, long-horizon runs, parallel subagents, memory, the send-to-user tool, and how to reduce false-positive safety fallbacks on legitimately benign work (Opus 4.8 is the intended fallback). Use when starting Fable-5 work, migrating skills/prompts from Opus, or diagnosing why benign work keeps falling back to Opus. Note: if a task is genuinely in a restricted domain, the fallback is intended safety behaviour, not something to work around.
 ---
 
 # Prompting Claude Fable 5 (and Mythos 5)
 
 Fable 5 is the top Mythos-class tier (above Opus). It shines on long-horizon, ambiguous, hours-to-days
 work. Prompt/scaffold it differently from Opus 4.8. Source: Anthropic's *Prompting Claude Fable 5* guide
-+ hard-won lessons from a real session that got repeatedly bounced to Opus (2026-07-02).
++ hygiene lessons from benign review work that kept falling back to Opus (snapshot 2026-07-02).
 
-## ⚠️ The safety-classifier gotcha (read this FIRST — it's the one that wastes hours)
+## ⚠️ Why benign work sometimes falls back to Opus (read this FIRST)
 
-Fable 5 runs safety classifiers that return `stop_reason: "refusal"` and, in Claude Code, **silently swap
-the session to Opus 4.8**. They target three domains, and **benign work in these domains also trips them**:
+Fable 5 runs safety classifiers. When one fires, the turn returns `stop_reason: "refusal"` and falls back to
+Opus 4.8 — in some Claude Code configurations that swap happens automatically. **That fallback is the
+intended safety net, and most of the time it is the system working correctly.** This section is only about
+one narrower thing: the classifiers also produce **false positives on legitimately benign work**, and when
+honest, in-scope work keeps bouncing it's worth knowing why and how to cut the noise.
 
-1. **Offensive / benign cybersecurity** — exploits/malware AND ordinary security reviews (RLS, auth,
-   cross-tenant isolation, credentials, IDOR, secret handling). A read-only audit of *your own* app trips it.
-2. **Biology / life sciences** — lab methods, molecular mechanisms; benign bio too.
+> **Scope — this is about false positives on benign work, nothing else.** If a task is genuinely in a
+> restricted domain (real exploit/malware development, actual dangerous-bio methods), the fallback is the
+> intended safety behaviour — that's the classifier doing its job, and you should not try to circumvent it.
+> Everything below applies only when ordinary, legitimate work trips the filter. If you're unsure which case
+> you're in, treat it as the intended behaviour and let the fallback stand.
+
+Where benign work can trip it:
+
+1. **Security review of your own code** — a read-only audit (RLS, auth, cross-tenant isolation, secret
+   handling, IDOR) can score like offensive tooling even though you're reviewing an app you own.
+2. **Biology / life sciences** — benign lab or mechanism discussion can trip the bio classifier.
 3. **`reasoning_extraction`** — any instruction that tells the model to **echo / transcribe / explain its
-   internal reasoning as response text.** THIS is the sneaky one.
+   internal reasoning as response text.** This is the sneakiest, because it's self-inflicted and has nothing
+   to do with your topic — a "show your thinking" instruction trips it on otherwise-benign turns.
 
-### The two most common self-inflicted triggers
+### The two self-inflicted triggers — both are simple hygiene fixes
 
 - **"Show your thinking" output styles or instructions.** The Claude Code **"learning" and "explanatory"
-  output styles** instruct "★ Insight" blocks / "explain your implementation choices" on every turn → they
+  output styles** inject "★ Insight" blocks / "explain your implementation choices" on every turn → they
   trip `reasoning_extraction` on EVERY Fable turn, even benign ones. **Turn these output styles OFF for
-  Fable.** Also audit skills/system prompts for "walk me through your reasoning", "explain your thought
-  process", "reflect and show your work" — remove them. If you need reasoning visibility, read the
-  structured `thinking` blocks (adaptive thinking) instead, or use a send-to-user tool for progress.
-- **Security-heavy context accumulation.** Once a session's context fills with cyber material, EVERY
-  subsequent Fable turn re-scores that heavy context and can bounce — even a one-line status update.
+  Fable.** Audit skills/system prompts for "walk me through your reasoning", "explain your thought process",
+  "reflect and show your work" and remove them — don't instruct the model to echo its raw reasoning as prose.
+  If you need reasoning visibility, read the structured `thinking` blocks (adaptive thinking) instead, or use
+  a send-to-user tool for progress. (Quick check: if your first reply contains a "★ Insight" block, the
+  output style is still on.)
+- **Keep durable state in files so a fallback loses no work.** A fallback mid-run shouldn't cost you
+  anything. Persist work to files and run long jobs as background workflows/tasks, so if a turn falls back to
+  Opus the state is already saved and you just continue. This is good hygiene regardless of classifiers.
 
-### How to survive a legitimately cyber/bio-adjacent task on Fable
+### If benign review work keeps falling back
 
-- **Keep the main Fable thread thin and off the trigger domain.** Delegate the sensitive reading/analysis to
-  **subagents** (they run on their own models — sonnet/opus/haiku — and don't bounce the main thread).
-  Persist their output to **files**; return only short, product-framed summaries to the main thread.
-- **Frame accurately, not as attack tooling** — "verify tenant isolation for my own app", "product-quality
-  review", not "forge cross-tenant events / bypass RLS". Reduces false positives (doesn't eliminate them).
-- **Make every turn idempotent + cheap to lose:** durable state in files + background workflows, so a bounce
-  loses nothing — you just re-issue that one turn.
-- **If a specific turn MUST ingest the cyber content** (e.g. the final synthesis reading a security section):
-  it will likely bounce. Either split that content into a separate file the Fable turn never opens and fold
-  it in by reference, run it in a **fresh clean session**, or accept doing that one turn on Opus.
-- **Configure fallback deliberately.** Server/client-side fallback to Opus 4.8 is the intended safety net;
-  in Claude Code the swap is automatic. Don't fight it turn-by-turn — plan around it.
-
-### The operational template that actually holds (proven in a follow-up session, 2026-07-03)
-
-The principles above fail if the **handoff doesn't enforce them.** The recurring miss: a handoff that says
-*"read [these heavy findings files] and write the synthesis"* silently violates "keep the main thread thin" —
-the lead reads the trigger content inline on turn 1 and bounces, exactly as if there were no rule. **Having
-the lesson is not applying it.** (Observed 2026-07-03: a lead session with this skill loaded and the lesson
-banked still read 959 lines of security findings on the main thread, because the handoff said "read these
-and synthesize.") The handoff itself must delegate the reading. A Fable review/synthesis handoff that survives:
-
-1. **Standing model line up top:** "PRIMARY: Fable 5 @ `<effort>`, keep it here the whole session; a bounce
-   to Opus on heavy turns is expected and costs nothing — do NOT switch your primary model to Opus."
-2. **Turn-1 survival gate:** "Your FIRST reply must contain NO '★ Insight' block. If it does, the
-   learning/explanatory output style is ON — stop, ask the user to turn it off, and re-confirm before any
-   work." (The model can't turn the style off itself, but it can refuse to proceed until the user does.)
-3. **The main thread reads NOTHING heavy.** Do not list the raw findings/security files as "read these."
-   Instead: "delegate ALL reading of the review files to subagents/Workflows (they run on Opus/Sonnet/Haiku
-   and don't bounce the orchestrator); they return short product-framed summaries; you synthesize from
-   those." Keep the handoff document itself light on raw security detail for the same reason.
-4. **Run synthesis + council as Workflows.** Then: "if the main thread bounces, the work completes
-   identically on the subagents — so a bounce costs nothing; don't fight it." This converts a bounce from a
-   session-killer into a non-event, and removes the temptation to make Opus the primary.
-5. **Frame product-first everywhere** — "assess launch/quality readiness of my own app," never attack-framing.
-
-Meta-rule: **when a task handoff contradicts this, flag it and restructure — don't follow it.** A read-inline
-handoff is the anti-pattern even when every other survival step is done right.
+- **Describe the task as what it honestly is** — "review my own app's tenant isolation", "readiness
+  assessment" — because that is the accurate description, not to slip anything past a check. Accurate scoping
+  won't (and shouldn't) get restricted content through; it just avoids mislabelling benign work as offensive.
+- **Prefer fresh-context verifier subagents for review** — they beat self-critique on quality anyway (see
+  below). But a subagent's model is **configuration-dependent**: a subagent that inherits Fable will hit the
+  same classifier and fall back too. Verify the subagent config rather than assuming subagents are immune.
+- **If genuinely-benign work still keeps bouncing, treat it as a known false-positive limitation** — accept
+  the Opus fallback for that work, or report the false positive through normal feedback channels. Don't
+  re-architect the task specifically to keep flagged content away from the classifier; that would cross from
+  "reduce noise on benign work" into working around a safety check, which is out of scope here.
 
 ## Effort is the primary control
 
@@ -110,7 +97,9 @@ Fable follows short directives well; you don't have to name every behavior. Usef
   subtasks and keep working while they run; intervene if one goes off track." Long-lived subagents keep
   context (cache reads) and avoid bottlenecking on the slowest. Prefer async over blocking.
 - **Self-verification:** fresh-context **verifier subagents** beat self-critique. "Verify your work with
-  subagents against the spec at intervals."
+  subagents against the spec at intervals." Note a subagent's model is **configuration-dependent** — it can
+  run on a different configured model, but a subagent that inherits Fable behaves like Fable (same effort
+  characteristics, same classifiers); check the config rather than assuming otherwise.
 - **Memory:** give it a place to write lessons (one file per lesson, one-line summary on top; update, don't
   duplicate; delete wrong notes). Bootstrap by having it reflect on past sessions via subagents.
 - **send-to-user tool** (long async agents): a client tool that renders its input verbatim without ending
@@ -133,9 +122,11 @@ Fable follows short directives well; you don't have to name every behavior. Usef
   fallbacks (see the gotcha section). Audit for reflection/show-your-thinking language when migrating.
 - **Give the reason, not just the request** — "I'm working on X for Y; they need Z; with that in mind: …".
 
-## One-line diagnosis for "my Fable session keeps dropping to Opus"
+## One-line diagnosis for "my BENIGN Fable session keeps dropping to Opus"
 
-Check, in order: (1) an active **learning/explanatory output style** or any show-your-thinking instruction
-→ turn it off; (2) **cyber/bio content** in context → move detail to files/subagents, keep the main thread
-thin, or run the sensitive turn in a fresh session / on Opus; (3) accumulated heavy context → **start a
-fresh session**. It is almost never fixable by rewording a single message.
+If genuinely benign work is falling back, check in order: (1) an active **learning/explanatory output style**
+or any show-your-thinking instruction → turn it off (the highest-yield fix, and pure hygiene); (2) your
+prompts/skills contain "echo/explain your reasoning" language → remove it. If neither applies and the work is
+truly benign, this is a **known false positive** — accept the Opus fallback or report it, and make sure your
+state is in files so the fallback costs you nothing. Reminder: if the work is actually in a restricted
+domain, the fallback is the intended behaviour, not a bug to route around.
