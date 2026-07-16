@@ -1,6 +1,6 @@
 ---
 name: huggingface-dataset-script-deprecation
-description: Work around `RuntimeError: Dataset scripts are no longer supported` when loading pre-2024 HuggingFace datasets on `datasets` v4.x. Empirical substitution workflow — find parquet-native community mirrors, verify schemas by streaming the first sample instead of trusting the README, and document the substitution honestly in the loader.
+description: Work around `RuntimeError: Dataset scripts are no longer supported` when loading pre-2024 HuggingFace datasets on `datasets` v4.x. Empirical substitution workflow — find parquet-native community mirrors, smoke-test by streaming the first sample instead of trusting the README (a one-row stream is a smoke test, not full schema verification), and document the substitution honestly in the loader.
 ---
 
 # HuggingFace Dataset Substitution: Legacy Scripts in datasets v4.x

@@ -205,17 +205,19 @@ Run these in order. Each is cheap and rules out a whole class:
 ## 8. The meta-lesson (why this skill exists)
 
 The originating project — a local-model review council — ran **four** controlled prompt experiments (120
-runs, predefined rubrics) trying to make this model contribute as a review seat. **All four were rejected.**
-The vendor documentation explained why in one sentence on the model card — the model cannot think, and they
-were prompting it to think.
+runs, predefined rubrics) trying to make this model contribute as a review seat. **All four were rejected**,
+and the conclusion drawn at the time — "the model can't think, so it can't review" — turned out to be wrong.
 
-**Read the card and run `ollama show` before you design an experiment.** Prompt tuning cannot fix a
-capability the model does not have — that part stands.
+**Read the card and run `ollama show` before you design an experiment.** The real capability the model
+lacks is an *exposed deliberation channel* (no `<think>` blocks, no room to reason before the answer) — NOT
+the ability to reason at all. That distinction is the whole lesson: prompting it to "think step by step"
+asks for a channel that doesn't exist, but the model still reasons fine when you give it room in its output
+or ask it directly.
 
-**But the sequel matters more.** All four rejected experiments **ADDED** targeting instructions. **None
+**And the sequel matters more.** All four rejected experiments **ADDED** targeting instructions. **None
 removed the prompt's suppression clauses.** 0-for-4 on *adding* says nothing about *removing* — and it was
-the suppression clauses, not the model, that produced the silence. The 2026-07-16 probe then refuted the
-"wrong model" conclusion outright: it finds the bug 5/5 when asked without the reviewer framing.
+the suppression clauses, not a missing reasoning capability, that produced the silence. The 2026-07-16 probe
+refuted the "wrong model" conclusion outright: it finds the bug 5/5 when asked without the reviewer framing.
 
 **Three lessons, each paid for:**
 1. **Optimisation target ≠ capability ceiling.** Don't turn "tuned for X" into "can't do Y."
