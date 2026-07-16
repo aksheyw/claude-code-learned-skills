@@ -21,7 +21,12 @@ Worst case: the test suite that embedded 10 docs passes; production embed of 500
 Two-layer fix at the adapter level:
 
 1. **Transparent batching.** Split the input list into fixed-size chunks (default 50 — conservative for Gemini Embedding 2 Preview), call the API per batch, concatenate results. Single-batch path is unchanged.
+
+   > **Caveat — count-based batching is not token-safe.** A fixed document *count* per batch does NOT guarantee you stay under the provider's per-request *token* or *byte* limit. 50 short docs and 50 long ones are very different payloads, so a count that's safe for one corpus can still 200-with-error on another. For variable-length inputs, prefer **token-aware packing** (sum an approximate token/char count per batch and cap on that), or wrap the per-batch call in **adaptive retry** that halves `batch_size` on a `data`-missing / limit error and retries. Treat the fixed count as a floor of safety, not a guarantee.
+
 2. **Defensive error.** If a batch response still lacks `data`, raise a `RuntimeError` that surfaces the response's actual top-level keys, the batch size that triggered it, and a ~300-char preview of the response body. Future failures get diagnosable signal instead of an opaque KeyError.
+
+   > **Caveat — the response preview can leak.** `str(body)[:300]` may include provider diagnostics or **echoed input text** (some endpoints reflect part of the request in error bodies). That's fine for local debugging, but in a sensitive context it can spill user content or provider internals into logs. Before logging in production, **sanitize the preview** — log only the top-level keys and a length, or redact, rather than dumping the raw body.
 
 ## Example
 
@@ -62,6 +67,15 @@ def test_embed_documents_batches_large_inputs(embeddings):
     vecs = embeddings.embed_documents(inputs)
     assert len(vecs) == 75
 ```
+
+> **Caveat — `assert len(vecs) == 75` proves the output count, NOT that batching ran.** A single un-batched call that happened to succeed would pass this same assertion. To actually *exercise* the batching path, assert the **number of HTTP requests**: mock/spy the per-batch call (`_embed_one_batch` or the underlying `client.post`) and assert it was invoked `ceil(75/50) == 2` times. Count-of-outputs is a weak proxy; request-count is the real behavioural check.
+>
+> ```python
+> def test_embed_documents_makes_two_batch_calls(embeddings, mocker):
+>     spy = mocker.spy(embeddings, "_embed_one_batch")
+>     embeddings.embed_documents([f"doc_{i}" for i in range(75)])
+>     assert spy.call_count == 2  # 75 inputs / batch_size 50 -> 2 requests
+> ```
 
 ## When to Use
 

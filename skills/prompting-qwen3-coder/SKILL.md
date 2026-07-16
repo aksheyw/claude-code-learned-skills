@@ -29,12 +29,14 @@ Consequences, and they are large:
 - `ollama show qwen3-coder:30b` → `Capabilities: completion, tools`. **No `thinking`.** (Compare gpt-oss:20b,
   which *does* list `thinking`.) That one command is the fastest way to check this for any model.
 - **Any prompt that asks it to "think step by step", "reason carefully first", or "take your time" is asking
-  for a channel that does not exist.** It cannot reason before answering. Whatever reasoning happens must
-  happen *in the emitted tokens themselves*.
+  for a channel that does not exist.** It has no exposed thinking channel and does not emit `<think>` blocks;
+  it cannot externalize deliberation *before* the answer. It reasons fine when asked directly (measured — §2,
+  §7), but whatever reasoning happens shows up *in the emitted answer tokens themselves*, never in a separate
+  hidden pass first.
 
-> **The practical rule:** if you need deliberation before an answer, either give it room to reason **in its
-> output** (see §3), or use a different model. Prompting it to think harder is structurally doomed, not
-> merely ineffective.
+> **The practical rule:** if you need deliberation to precede the answer, either give it room to reason **in
+> its output** (see §3), or use a different model. Asking it to "think harder first" targets a channel it
+> does not have — it is ineffective, not a fix.
 
 ## 2. It is OPTIMISED as an agentic patch-writer — but that is not a capability bound
 
@@ -70,40 +72,45 @@ The vendor's **only** documented structured-output path is **tool calling** (the
 OpenAI-compatible tools API; the README ships a dedicated tool parser for SGLang and vLLM). Ollama honours
 this natively: `PARSER qwen3-coder`, `Capabilities: … tools`.
 
-**There is NO official Qwen guidance endorsing grammar-constrained JSON (`format: "json"` / GBNF) for this
-model.** Neither endorsed nor warned against — it is simply not the sanctioned path.
+**Tool calling is the documented structured-output path; grammar-constrained JSON (`format: "json"` / GBNF)
+guidance was NOT FOUND for this model** — neither endorsed nor warned against. That is absence of evidence,
+not evidence of prohibition: it is undocumented for this model, not forbidden.
 
 > ⚠️ **CORRECTED 2026-07-16 by measurement — the mechanism below is REFUTED as a cause of SILENCE.**
 > A 2×2 factorial (format:json × brace-shape, n=10 each, qwen3-coder) came back **0/10 in every cell** —
 > removing the grammar changed **nothing**. The real cause was the *reviewer prompt's suppression clauses*
 > (the same model, asked the same question **without** that framing, found the bug 5/5). Tool calling is
-> still the vendor's sanctioned path and the advice below still stands **on vendor grounds** — just do not
+> still the vendor's documented path and the advice below still stands **on vendor grounds** — just do not
 > expect dropping `format: "json"` to un-silence a quiet seat. Evidence: the same 2026-07-16 probe
 > (§7 item 2).
 
-**Why it was thought to hurt THIS model** (an inference from verified facts, never a Qwen claim — priced at
-~50% and **subsequently refuted**; retained because the reasoning is instructive and the vendor facts hold):
+**The REFUTED hypothesis — why grammar was *thought* to hurt THIS model** (an inference from verified facts,
+never a Qwen claim — priced at ~50% and **refuted 0/10 in every cell of a 2×2**; retained only because the
+reasoning is instructive and the vendor facts hold, NOT as a live explanation):
 
 A non-thinking model + a grammar forcing the first token to be `{` = **nowhere to reason**. The model's first
 structural decision is `{"findings": [` and then immediately whether to emit `]`. Under that constraint the
 empty/null answer is the shortest, highest-probability, always-valid completion. Emitting real content
-requires having *already* solved the problem with zero deliberation tokens spent.
+requires having *already* solved the problem with zero deliberation tokens spent. **Plausible — and measured
+false.** Removing the grammar changed nothing (0/10 → 0/10). Do not carry this mechanism forward as a cause.
 
-**The signature this produces is "silent or flooding":**
-- Left alone → fast, well-formed, confident **empty** results. Not a crash. Not malformed. Just nothing.
-  Which means whiff-detection and "did it error?" checks **cannot catch it**.
-- Pushed harder by a prompt → **confabulation**, because it still has no room to reason but now the
-  instruction demands output.
+**The CONFIRMED cause — the reviewer prompt's own suppression clauses — produces a "silent or flooding"
+signature:**
+- Suppression clause left in → fast, well-formed, confident **empty** results. Not a crash. Not malformed.
+  Just nothing. Which means whiff-detection and "did it error?" checks **cannot catch it**.
+- Suppression clause removed / the prompt pushed for output → **flooding / confabulation** (measured: it
+  flagged a bug-free control diff 9/10 and produced *more* findings on clean code than on buggy — §7 item 2).
 
 **If you see either pole, suspect YOUR PROMPT first — measured.** The grammar was the intuitive culprit and
 it was refuted 0/10 in every cell of a 2×2. Suppression clauses in the reviewer framing were the actual
 cause. Check what your prompt tells it NOT to do before you touch the output format.
 
 **In order of preference:**
-1. **Tool calling** — the sanctioned path, and the output mode it was actually RL-trained for. Highest effort.
+1. **Tool calling** — the documented path, and the output mode it was actually RL-trained for. Highest effort.
 2. **Free prose, parsed leniently** — give it room to reason in its output, then extract. Cheapest test.
-3. **`format: "json"`** — what most harnesses reach for first. Unsanctioned for this model, so worth moving
-   off on vendor grounds — but **it is not what silences a seat**, so do not chase it as a fix.
+3. **`format: "json"`** — what most harnesses reach for first. Undocumented for this model (not forbidden),
+   so worth moving off toward the documented path — but **it is not what silences a seat**, so do not chase
+   it as a fix.
 
 ## 4. Official sampling parameters — use them; don't quietly override them
 
@@ -137,9 +144,12 @@ an empty model.** Don't over-read it.
 - **Native 262,144 (256K)**; extendable to ~1M via **YaRN** (org-level README only — there is **no YaRN
   section on the 30B model card**, so no per-model "when to enable" guidance or stated cost exists. Don't
   cite one).
-- **Ollama serves 4096 by default regardless of the model's native window.** Precedence: API param >
-  `OLLAMA_CONTEXT_LENGTH` > Modelfile PARAMETER > built-in default. **Set `num_ctx` explicitly** — never
-  rely on the default, or you will silently truncate.
+- **The Ollama default context is version-dependent — do not rely on any default.** The tested install
+  (Ollama 0.32.0, 2026-07-16) served **4096 regardless of the model's native window**. Current Ollama has
+  moved to VRAM-dependent defaults (roughly 4K / 32K / 256K chosen by available memory), so the number you
+  get now depends on your Ollama version and hardware. Precedence is stable: API param >
+  `OLLAMA_CONTEXT_LENGTH` > Modelfile PARAMETER > built-in default. **Set `num_ctx` explicitly** rather than
+  trusting whatever the default happens to be, or you may silently truncate.
 - On constrained hardware, `num_ctx` is the big memory lever: the native 256K window blows the KV cache to
   ~45GB and thrashes a 24GB machine.
 
@@ -179,7 +189,8 @@ Run these in order. Each is cheap and rules out a whole class:
 3. Are you sending `format: "json"` / a grammar? → worth trying free prose + lenient parse on vendor grounds
    (§3) — but **measured NOT to be a silence cause**. Do not expect it to fix an empty seat.
 4. Do your sampling params match §4? → if not, that's your harness, not the model.
-5. Is `num_ctx` set explicitly? → Ollama defaults to 4096 and truncates silently.
+5. Is `num_ctx` set explicitly? → the Ollama default is version-dependent (4096 on the tested 0.32.0; newer
+   builds pick a VRAM-dependent default) and can truncate silently — don't rely on it (§5).
 6. **Positive control — run this the moment output looks uniform:** ask the model a plain question about the
    input ("which files changed?") and ask it directly about the suspected bug, with **no** role framing. If it
    answers both, the model is fine and **your scaffold is the bug**. This one check overturned two confident
