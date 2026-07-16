@@ -16,16 +16,16 @@ This is a slice of that library — the skills that have generalized beyond my p
 
 | Skill | What it does | When to use |
 |-------|--------------|-------------|
-| **[docker-config-qa-regression](skills/docker-config-qa-regression.md)** | 6-phase verification checklist after any docker-compose change | After modifying volumes, env vars, ports — before declaring "done" |
-| **[docker-ephemeral-volume-fix](skills/docker-ephemeral-volume-fix.md)** | Diagnose and fix "settings randomly reset" pattern — when app config writes to a non-mounted path | When dashboard/UI changes don't persist across `docker compose down/up` |
-| **[ssh-docker-remote-config-management](skills/ssh-docker-remote-config-management.md)** | Avoid the SSH → docker exec → jq quoting nightmare using pipe-and-copy + SIGUSR1 hot-reload | Editing JSON configs inside containers on a remote VPS |
+| **[docker-config-qa-regression](skills/docker-config-qa-regression/SKILL.md)** | 6-phase verification checklist after any docker-compose change | After modifying volumes, env vars, ports — before declaring "done" |
+| **[docker-ephemeral-volume-fix](skills/docker-ephemeral-volume-fix/SKILL.md)** | Diagnose and fix "settings randomly reset" pattern — when app config writes to a non-mounted path | When dashboard/UI changes don't persist across `docker compose down/up` |
+| **[ssh-docker-remote-config-management](skills/ssh-docker-remote-config-management/SKILL.md)** | Avoid the SSH → docker exec → jq quoting nightmare using pipe-and-copy + SIGUSR1 hot-reload | Editing JSON configs inside containers on a remote VPS |
 
 ### Data & ML pipelines
 
 | Skill | What it does | When to use |
 |-------|--------------|-------------|
-| **[huggingface-dataset-script-deprecation](skills/huggingface-dataset-script-deprecation.md)** | Substitution workflow for legacy script-based HF datasets that `datasets` v4.x refuses to load | On `RuntimeError: Dataset scripts are no longer supported` |
-| **[openai-compatible-embeddings-batching](skills/openai-compatible-embeddings-batching.md)** | Transparent batching + defensive errors for embeddings adapters — some providers return HTTP 200 error bodies with no `data` key | Building an adapter against any OpenAI-protocol embeddings endpoint (OpenRouter, vLLM, Together, self-hosted) |
+| **[huggingface-dataset-script-deprecation](skills/huggingface-dataset-script-deprecation/SKILL.md)** | Substitution workflow for legacy script-based HF datasets that `datasets` v4.x refuses to load | On `RuntimeError: Dataset scripts are no longer supported` |
+| **[openai-compatible-embeddings-batching](skills/openai-compatible-embeddings-batching/SKILL.md)** | Transparent batching + defensive errors for embeddings adapters — some providers return HTTP 200 error bodies with no `data` key | Building an adapter against any OpenAI-protocol embeddings endpoint (OpenRouter, vLLM, Together, self-hosted) |
 
 ### Model prompting field guides
 
@@ -33,12 +33,12 @@ A slightly different species from the rest: distilled from cited public sources 
 
 | Skill | What it does | When to use |
 |-------|--------------|-------------|
-| **[prompting-fable-5](skills/prompting-fable-5.md)** | Effort levels, long-horizon scaffolding, subagents/memory — and the safety classifiers that silently bounce sessions to Opus 4.8 | Starting Fable-5 work, migrating prompts from Opus, or diagnosing a session that keeps falling back to Opus |
-| **[prompting-opus-4-8](skills/prompting-opus-4-8.md)** | Thinking-off-by-default, effort tuning, literal instruction-following, the code-review recall harness effect, and the persistent cream/serif design default | Starting Opus 4.8 work, migrating from 4.7, or getting a cream+serif design you didn't ask for |
-| **[prompting-sonnet-5](skills/prompting-sonnet-5.md)** | The 4.6-migration API breakers (sampling params now 400-error, +30% tokenizer, thinking budgets removed), effort mapping, tool-use triggering | Migrating a Sonnet 4.6 prompt or API call, or picking Sonnet as a subagent model |
-| **[prompting-qwen3-coder](skills/prompting-qwen3-coder.md)** | Non-thinking model with no deliberation channel; official sampling params, tool calling as the sanctioned path, and the measured "silent or flooding" failure signature | Wiring qwen3-coder into a local review seat, or debugging an empty/fabricating local model |
+| **[prompting-fable-5](skills/prompting-fable-5/SKILL.md)** | Reducing false-positive safety fallbacks on benign security/bio review work, plus effort levels, long-horizon scaffolding, subagents/memory | Benign security or bio review work that keeps bouncing to Opus 4.8, or general Fable-5 scaffolding |
+| **[prompting-opus-4-8](skills/prompting-opus-4-8/SKILL.md)** | Thinking-off-by-default, effort tuning, literal instruction-following, the code-review recall harness effect, and the persistent cream/serif design default | Starting Opus 4.8 work, migrating from 4.7, or getting a cream+serif design you didn't ask for |
+| **[prompting-sonnet-5](skills/prompting-sonnet-5/SKILL.md)** | The 4.6-migration API breakers (sampling params now 400-error, +30% tokenizer, thinking budgets removed), effort mapping, tool-use triggering | Migrating a Sonnet 4.6 prompt or API call, or picking Sonnet as a subagent model |
+| **[prompting-qwen3-coder](skills/prompting-qwen3-coder/SKILL.md)** | Non-thinking model with no exposed thinking channel; official sampling params, tool calling as the documented path, and the measured "silent or flooding" failure signature | Wiring qwen3-coder into a local review seat, or debugging an empty/fabricating local model |
 
-Each skill is one self-contained Markdown file with frontmatter (`name:`, `description:`) — drop-in compatible with Claude Code's skill system.
+Each skill is a self-contained folder — `skills/<name>/SKILL.md` with frontmatter (`name:`, `description:`) — the layout current Claude Code expects for skills.
 
 ## Install
 
@@ -46,13 +46,15 @@ Each skill is one self-contained Markdown file with frontmatter (`name:`, `descr
 git clone https://github.com/aksheyw/claude-code-learned-skills.git
 cd claude-code-learned-skills
 
-# Install all nine at once
+# Install all nine at once (copy the skill folders)
 mkdir -p ~/.claude/skills
-cp skills/*.md ~/.claude/skills/
+cp -r skills/*/ ~/.claude/skills/
 
-# Or install just the one you need
-cp skills/ssh-docker-remote-config-management.md ~/.claude/skills/
+# Or install just the one you need (copy its folder)
+cp -r skills/ssh-docker-remote-config-management/ ~/.claude/skills/
 ```
+
+Each skill lands as `~/.claude/skills/<name>/SKILL.md`.
 
 In any Claude Code session, the skills auto-load when their description matches the task. To explicitly invoke:
 
@@ -98,7 +100,7 @@ The pattern: each phase has a specific check and a specific failure mode. The ou
 
 ## Troubleshooting
 
-- **Skill doesn't autocomplete:** confirm files landed at `~/.claude/skills/<name>.md` (flat). Skills with directory layout (`~/.claude/skills/<name>/SKILL.md`) also work, but pick one.
+- **Skill doesn't autocomplete:** confirm each skill landed as a folder at `~/.claude/skills/<name>/SKILL.md` — not a loose `<name>.md`. Current Claude Code loads skills from the folder layout.
 - **Skill doesn't auto-invoke on task description:** mention the skill name explicitly. The description-matching is fuzzy; explicit names are reliable.
 - **`docker-ephemeral-volume-fix` produces a long checklist but no fix:** that's expected — the skill diagnoses the pattern, then prescribes the volume mount you need to add. The fix is one line in `docker-compose.yml`; the diagnostic walks you to it.
 - **`ssh-docker-remote-config-management` quoting still breaks:** the skill's pipe-and-copy pattern needs you to be on the remote host already, not running `ssh user@host 'docker exec ...'` from local. Read the skill's "Anti-pattern" section.
