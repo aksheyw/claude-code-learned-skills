@@ -1,22 +1,42 @@
 # Claude Code Learned Skills — Captured From Real Sessions
 
-> **Three Docker / SSH / VPS skills that were auto-extracted from actual debugging sessions and codified for re-use.**
+> **Nine skills extracted from actual debugging and research sessions — Docker / SSH / VPS ops, data & ML pipeline gotchas, and model prompting field guides.**
 
-Most "Claude Code skills" you'll find online are written speculatively — someone imagines a useful skill and writes it down. These three are different: they were captured *after* I'd already debugged the bug once, refined into reusable methodology, and added to my Claude Code config so the same gotcha couldn't bite me twice.
+Most "Claude Code skills" you'll find online are written speculatively — someone imagines a useful skill and writes it down. These are different: they were captured *after* I'd already debugged the bug (or run the experiments) once, refined into reusable methodology, and added to my Claude Code config so the same gotcha couldn't bite me twice.
 
 ## Why I built this
 
 I run a continuous-learning loop on every Claude Code session: when a bug takes more than 20 minutes to figure out, the resolution gets distilled into a skill. After ~6 months of this, the skills became substantial enough that I wanted them findable + share-able.
 
-This is a slice of that library — the three Docker / SSH / VPS skills that have generalized beyond my personal stack to be useful for anyone running containerized apps on a remote VPS.
+This is a slice of that library — the skills that have generalized beyond my personal stack: Docker / SSH / VPS ops, two data/ML pipeline gotchas, and four model prompting guides.
 
 ## What's in this repo
+
+### Docker / SSH / VPS
 
 | Skill | What it does | When to use |
 |-------|--------------|-------------|
 | **[docker-config-qa-regression](skills/docker-config-qa-regression.md)** | 6-phase verification checklist after any docker-compose change | After modifying volumes, env vars, ports — before declaring "done" |
 | **[docker-ephemeral-volume-fix](skills/docker-ephemeral-volume-fix.md)** | Diagnose and fix "settings randomly reset" pattern — when app config writes to a non-mounted path | When dashboard/UI changes don't persist across `docker compose down/up` |
 | **[ssh-docker-remote-config-management](skills/ssh-docker-remote-config-management.md)** | Avoid the SSH → docker exec → jq quoting nightmare using pipe-and-copy + SIGUSR1 hot-reload | Editing JSON configs inside containers on a remote VPS |
+
+### Data & ML pipelines
+
+| Skill | What it does | When to use |
+|-------|--------------|-------------|
+| **[huggingface-dataset-script-deprecation](skills/huggingface-dataset-script-deprecation.md)** | Substitution workflow for legacy script-based HF datasets that `datasets` v4.x refuses to load | On `RuntimeError: Dataset scripts are no longer supported` |
+| **[openai-compatible-embeddings-batching](skills/openai-compatible-embeddings-batching.md)** | Transparent batching + defensive errors for embeddings adapters — some providers return HTTP 200 error bodies with no `data` key | Building an adapter against any OpenAI-protocol embeddings endpoint (OpenRouter, vLLM, Together, self-hosted) |
+
+### Model prompting field guides
+
+A slightly different species from the rest: distilled from cited public sources (Anthropic's prompting guides, the Qwen model card + generation config + blog) plus my own testing, rather than from a single debugging session. Each carries its source URLs and a snapshot date — if the snapshot is more than ~60 days old, re-fetch the source and reconcile before high-stakes use.
+
+| Skill | What it does | When to use |
+|-------|--------------|-------------|
+| **[prompting-fable-5](skills/prompting-fable-5.md)** | Effort levels, long-horizon scaffolding, subagents/memory — and the safety classifiers that silently bounce sessions to Opus 4.8 | Starting Fable-5 work, migrating prompts from Opus, or diagnosing a session that keeps falling back to Opus |
+| **[prompting-opus-4-8](skills/prompting-opus-4-8.md)** | Thinking-off-by-default, effort tuning, literal instruction-following, the code-review recall harness effect, and the persistent cream/serif design default | Starting Opus 4.8 work, migrating from 4.7, or getting a cream+serif design you didn't ask for |
+| **[prompting-sonnet-5](skills/prompting-sonnet-5.md)** | The 4.6-migration API breakers (sampling params now 400-error, +30% tokenizer, thinking budgets removed), effort mapping, tool-use triggering | Migrating a Sonnet 4.6 prompt or API call, or picking Sonnet as a subagent model |
+| **[prompting-qwen3-coder](skills/prompting-qwen3-coder.md)** | Non-thinking model with no deliberation channel; official sampling params, tool calling as the sanctioned path, and the measured "silent or flooding" failure signature | Wiring qwen3-coder into a local review seat, or debugging an empty/fabricating local model |
 
 Each skill is one self-contained Markdown file with frontmatter (`name:`, `description:`) — drop-in compatible with Claude Code's skill system.
 
@@ -26,7 +46,7 @@ Each skill is one self-contained Markdown file with frontmatter (`name:`, `descr
 git clone https://github.com/aksheyw/claude-code-learned-skills.git
 cd claude-code-learned-skills
 
-# Install all three at once
+# Install all nine at once
 mkdir -p ~/.claude/skills
 cp skills/*.md ~/.claude/skills/
 
@@ -47,7 +67,7 @@ In a fresh Claude Code session:
 
 - Type `/docker-config-qa-regression` — autocomplete should suggest the skill.
 - Or ask: *"verify my last docker-compose change"* — Claude should pick up the skill by description match.
-- All three skills should show in `/help skills`.
+- All nine skills should show in `/help skills`.
 
 If none of those work, see **Troubleshooting** below.
 
