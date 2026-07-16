@@ -18,19 +18,25 @@ Worst case: the test suite that embedded 10 docs passes; production embed of 500
 
 ## Solution
 
-Two-layer fix at the adapter level:
+Three layers at the adapter level — the third is what makes it actually safe:
 
-1. **Transparent batching, capped by size not just count.** A fixed document *count* per batch does NOT guarantee you stay under the provider's per-request *token*/*byte* limit — 50 short docs and 50 long ones are very different payloads. So the batcher below caps each batch by **both** a document count **and** an approximate character budget (a cheap stand-in for tokens; swap in a real tokenizer count for exact control). Single-batch path is unchanged.
+1. **Group by count + an approximate size budget.** A fixed document *count* per batch does NOT stay under the provider's per-request *token*/*byte* limit — 50 short docs and 50 long ones are very different payloads. Grouping by both a doc count and an approximate character budget helps, but a character count is only a **heuristic** for tokens — it never *guarantees* you're under the real limit, and a single document larger than the budget still can't be split by grouping alone. So grouping is a first pass, not the safety net.
 
-2. **Defensive error that doesn't leak.** If a batch response still lacks `data`, raise a `RuntimeError` that surfaces the response's top-level keys and its length — **not** the raw body, which can echo request text or provider internals into logs. That's enough to diagnose without spilling user content.
+2. **Adaptive halving is the real safety net.** Wrap each batch call so that if the provider still rejects it for size, the batch is **halved and retried** until it fits — or, if a single document alone still exceeds the limit, that surfaces as a clear error (a genuine problem, not a batching one). This makes the adapter correct regardless of how far off the character estimate was, and handles the oversized-single-doc case grouping can't.
+
+3. **Defensive error that doesn't leak.** When a response lacks `data`, raise an error that surfaces the response's JSON type, top-level keys (if it's an object), and its length — **not** the raw body, which can echo request text or provider internals into logs.
 
 ## Example
 
 ```python
+class _EmbeddingLimitError(RuntimeError):
+    """Raised when a batch is (probably) over the provider's per-request limit."""
+
 class OpenRouterEmbeddings(Embeddings):
     DEFAULT_BATCH_SIZE = 50
-    # Approximate per-request char budget (~ token limit, char-estimated).
-    # Tune per provider; replace with a real tokenizer count for exact control.
+    # Heuristic per-request char budget (~ token limit, char-estimated). Tune per
+    # provider; a real tokenizer count is more exact, but the halving retry below is
+    # what actually guarantees correctness, so an estimate here is fine.
     APPROX_CHAR_BUDGET = 90_000
 
     def __init__(self, ..., batch_size: int = DEFAULT_BATCH_SIZE):
@@ -38,7 +44,7 @@ class OpenRouterEmbeddings(Embeddings):
         self.batch_size = batch_size
 
     def _batches(self, texts: list[str]):
-        """Yield batches capped by BOTH a doc count and an approximate char budget."""
+        """First-pass grouping by doc count AND approximate char budget."""
         batch, chars = [], 0
         for t in texts:
             if batch and (len(batch) >= self.batch_size
@@ -50,19 +56,32 @@ class OpenRouterEmbeddings(Embeddings):
         if batch:
             yield batch
 
-    def _embed_one_batch(self, texts: list[str]) -> list[list[float]]:
+    def _post_embeddings(self, texts: list[str]) -> list[list[float]]:
         response = self.client.post(f"{self.base_url}/embeddings", ...)
         response.raise_for_status()
         body = response.json()
-        if "data" not in body:
-            # Log keys + length only — NOT the raw body (it can echo input text
-            # or provider internals into logs).
-            raise RuntimeError(
-                f"Embeddings response missing 'data' (top-level keys: {list(body.keys())}; "
-                f"body length: {len(str(body))} chars). Batch of {len(texts)} likely "
-                f"exceeded the per-request token limit — reduce batch_size / APPROX_CHAR_BUDGET."
+        if not isinstance(body, dict) or "data" not in body:      # guard non-object JSON
+            keys = list(body.keys()) if isinstance(body, dict) else "n/a"
+            # Log type + keys + length only — NOT the raw body (it can echo input
+            # text or provider internals into logs).
+            raise _EmbeddingLimitError(
+                f"Embeddings response has no 'data' (json type: {type(body).__name__}, "
+                f"top-level keys: {keys}, length: {len(str(body))} chars). Batch of "
+                f"{len(texts)} likely exceeded the per-request token limit."
             )
         return [item["embedding"] for item in body["data"]]
+
+    def _embed_one_batch(self, texts: list[str]) -> list[list[float]]:
+        """Char budgeting is only an estimate; if a batch still trips the real limit,
+        halve and retry so the run self-corrects. A single doc that still fails is a
+        genuine error, not a batching one."""
+        try:
+            return self._post_embeddings(texts)
+        except _EmbeddingLimitError:
+            if len(texts) == 1:
+                raise
+            mid = len(texts) // 2
+            return self._embed_one_batch(texts[:mid]) + self._embed_one_batch(texts[mid:])
 
     def _embed(self, texts: list[str]) -> list[list[float]]:
         all_embeddings: list[list[float]] = []
@@ -71,14 +90,26 @@ class OpenRouterEmbeddings(Embeddings):
         return all_embeddings
 ```
 
-**Regression test — assert the request COUNT, not just the output count.** `assert len(vecs) == 75` would pass even for a single un-batched call, so it does not prove batching ran. Spy on the per-batch call and assert how many times it fired — that is the real behavioural check:
+**Regression test — assert the request COUNT, not just the output count.** `assert len(vecs) == 75` would pass even for a single un-batched call, so it does not prove batching ran. Spy on the HTTP-making call and assert how many times it fired:
 
 ```python
 def test_embed_documents_makes_two_batch_calls(embeddings, mocker):
-    spy = mocker.spy(embeddings, "_embed_one_batch")
-    vecs = embeddings.embed_documents([f"doc_{i}" for i in range(75)])
+    spy = mocker.spy(embeddings, "_post_embeddings")
+    vecs = embeddings.embed_documents([f"doc_{i}" for i in range(75)])   # 75 small docs, no split
     assert len(vecs) == 75          # sanity: every input got a vector
     assert spy.call_count == 2      # the real check: 75 inputs / batch 50 -> 2 requests
+
+def test_oversized_batch_halves_and_retries(embeddings, mocker):
+    # First call rejects for size, then the halves succeed -> more than one request.
+    calls = {"n": 0}
+    def fake_post(texts):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise _EmbeddingLimitError("too big")
+        return [[0.0] for _ in texts]
+    mocker.patch.object(embeddings, "_post_embeddings", side_effect=fake_post)
+    embeddings._embed_one_batch([f"doc_{i}" for i in range(4)])
+    assert calls["n"] == 3          # 1 rejected + 2 halves
 ```
 
 ## When to Use
