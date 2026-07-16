@@ -58,7 +58,19 @@ class OpenRouterEmbeddings(Embeddings):
 
     def _post_embeddings(self, texts: list[str]) -> list[list[float]]:
         response = self.client.post(f"{self.base_url}/embeddings", ...)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            # Some providers signal "batch too big" with a status code (413 Payload
+            # Too Large) rather than a 200 + error body. Convert that to the limit
+            # error so the halving retry handles it too. (If YOUR provider uses a
+            # size-flavored 400, add 400 here — but keep other 400s raising, since a
+            # 400 is often a real client error, not a size problem.)
+            if response.status_code == 413:
+                raise _EmbeddingLimitError(
+                    f"HTTP 413 on a batch of {len(texts)} — over the per-request size limit."
+                ) from e
+            raise
         body = response.json()
         if not isinstance(body, dict) or "data" not in body:      # guard non-object JSON
             keys = list(body.keys()) if isinstance(body, dict) else "n/a"
