@@ -11,7 +11,7 @@ description: Reliable pattern for editing JSON config files in Docker containers
 
 Editing JSON config files inside Docker containers on remote VPS via SSH involves triple-nested quoting (SSH → Docker exec → jq/shell) that frequently breaks. Direct `docker exec ... jq` commands via SSH produce quoting nightmares.
 
-## Solution — Pipe-and-Copy Pattern
+## Solution: Pipe-and-Copy Pattern
 
 Instead of fighting nested quoting, use this reliable pattern:
 
