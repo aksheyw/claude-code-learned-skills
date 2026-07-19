@@ -8,6 +8,8 @@ allowed-tools: Read, Write, Edit, Grep, Glob
 
 A file-based wiki system that captures durable project knowledge across Claude Code sessions. Instead of re-deriving context from raw session files each time, the wiki maintains structured, searchable, cross-referenced markdown pages that compound over time.
 
+> **Credit:** the core idea (an LLM incrementally building and maintaining a persistent, interlinked wiki that grows richer as knowledge is ingested) is Andrej Karpathy's LLMwiki pattern, from his [gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This skill is an implementation of that pattern for Claude Code.
+
 ## When to Use
 
 - **After fixing a non-obvious bug** — capture the root cause so future sessions don't re-investigate

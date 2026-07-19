@@ -49,7 +49,7 @@ A slightly different species from the rest: distilled from cited public sources 
 
 | Skill | What it does | When to use |
 |-------|--------------|-------------|
-| **[llm-wiki](skills/llm-wiki/SKILL.md)** | Persistent project wiki that compounds knowledge across sessions: ingest learnings, query past decisions, lint for contradictions. Working implementation of Karpathy's LLMwiki pattern, proven across 6 projects (249 pages on the largest). Ships with 4 slash commands ([`/wiki-init`](commands/wiki-init.md), [`/wiki-ingest`](commands/wiki-ingest.md), [`/wiki-query`](commands/wiki-query.md), [`/wiki-lint`](commands/wiki-lint.md)) and a frontmatter-vocabulary linter script | Any project that outlives one session |
+| **[llm-wiki](skills/llm-wiki/SKILL.md)** | Persistent project wiki that compounds knowledge across sessions: ingest learnings, query past decisions, lint for contradictions. Working implementation of [Karpathy's LLMwiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), proven across 6 projects (249 pages on the largest). Ships with 4 slash commands ([`/wiki-init`](commands/wiki-init.md), [`/wiki-ingest`](commands/wiki-ingest.md), [`/wiki-query`](commands/wiki-query.md), [`/wiki-lint`](commands/wiki-lint.md)) and a frontmatter-vocabulary linter script | Any project that outlives one session |
 
 Each skill is a self-contained folder: `skills/<name>/SKILL.md` with frontmatter (`name:`, `description:`), the layout current Claude Code expects for skills.
 
