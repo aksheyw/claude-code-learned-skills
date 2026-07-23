@@ -31,8 +31,9 @@ settings kept resetting on me, and the cause was a config file being written to 
 never mounted. The embeddings one exists because a provider answered an error with HTTP 200 and no
 data in it, which looks like success until everything downstream is quietly empty.
 
-I've been running this loop on every session for about six months. The pile eventually got big enough
-to be worth sharing, and this is the slice of it that has generalised past my own stack.
+I've been building with Claude Code since late 2025, and extracting skills like this from the
+sessions since early 2026. The pile eventually got big enough to be worth sharing, and this is the
+slice of it that has generalised past my own stack.
 
 <details>
 <summary><b>📋 All twelve skills, what each does, and when to reach for it</b></summary>
