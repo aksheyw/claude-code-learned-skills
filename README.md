@@ -107,13 +107,13 @@ cd claude-code-learned-skills
 
 # All twelve at once
 mkdir -p ~/.claude/skills ~/.claude/commands
-cp -r skills/*/ ~/.claude/skills/
+cp -r skills/. ~/.claude/skills/
 
 # The four wiki slash commands
 cp commands/*.md ~/.claude/commands/
 
-# Or just the one you came for
-cp -r skills/ssh-docker-remote-config-management/ ~/.claude/skills/
+# Or just the one you came for (no trailing slash on the source path)
+cp -r skills/ssh-docker-remote-config-management ~/.claude/skills/
 ```
 
 In any Claude Code session the skills load themselves when the description matches what you asked for.
