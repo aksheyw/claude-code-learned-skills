@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔧 Claude Code Learned Skills: captured from real sessions
+# 🔧 Claude Code Learned Skills: captured, not designed
 
 ### Twelve skills, none of them imagined in advance.
 
@@ -14,22 +14,23 @@ Claude Code is Anthropic's AI coding assistant. It runs in your terminal, reads 
 project, and can change them for you. A **skill** is a markdown file of instructions it loads and
 follows on its own when a matching task comes up.
 
-Most skills you find online were imagined in advance. These were all written afterwards, out of
-debugging sessions that had already cost me the time, and out of testing I'd already run.
+Most skills you find online were imagined in advance. These were written afterwards: out of
+debugging sessions that had already cost me the time, and out of published sources I cite and have
+tested.
 
 <img src="docs/how-a-skill-gets-here.svg" width="100%"
-     alt="How every skill here got written. A bug eats more than 20 minutes of a working session. At session end I write down the symptoms, the root cause, the exact fix and a checklist. That gets saved as one markdown file at ~/.claude/skills/name/SKILL.md, with no build step. Every session after, Claude Code loads it by itself when the task matches, so the same gotcha costs far less the second time. The library today holds twelve skills: 3 on Docker, SSH and remote servers, 2 on data and machine learning pipelines, 4 field guides to prompting AI models, 2 on finding bugs and organising docs, and 1 project wiki that outlives sessions. That last one is the most used: it runs in 16 of my projects, and the biggest of those wikis is 358 pages. Every skill is plain markdown with no dependencies.">
+     alt="How most of these skills got written. A bug eats more than 20 minutes of a working session. At session end I write down the symptoms, the root cause, the exact fix and a checklist. That gets saved as one markdown file at ~/.claude/skills/name/SKILL.md, with no build step. Every session after, Claude Code loads it by itself when the task matches, so the same gotcha costs far less the second time. The library today holds twelve skills: 3 on Docker, SSH and remote servers, 2 on data and machine learning pipelines, 4 field guides to prompting AI models, 2 on finding bugs and organising docs, and 1 project wiki that outlives sessions. That last one is the most used: it runs in 16 of my projects, and the biggest of those wikis is 358 pages. Every skill is plain markdown with no dependencies.">
 
 ## Why writing them afterwards is the whole point
 
 If I write a skill in advance I only ever write the happy path, because that's all I know at that
 point. Writing it afterwards, I already know the symptom I actually saw and the thing I wrongly
-blamed first, which is the part that saves the time later.
+blamed first, which is the part that saves the time later. That is where the debugging ones came from.
 
-So these read like field notes rather than documentation. The Docker one exists because container
-settings kept resetting on me, and the cause was a config file being written to a path that was
-never mounted. The embeddings one exists because a provider answered an error with HTTP 200 and no
-data in it, which looks like success until everything downstream is quietly empty.
+So most of these read like field notes rather than documentation. The Docker one exists because
+container settings kept resetting on me, and the cause was a config file being written to a path
+that was never mounted. The embeddings one exists because a provider answered an error with HTTP
+200 and no data in it, which looks like success until everything downstream is quietly empty.
 
 I've been building with Claude Code since late 2025, and extracting skills like this from the
 sessions since early 2026. The pile eventually got big enough to be worth sharing, and this is the

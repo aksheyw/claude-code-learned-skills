@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="960" height="440" role="img" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <rect x="0" y="0" width="960" height="440" fill="#FFFFFF"/>
 
-  <text x="40" y="38" font-size="15" font-weight="600" fill="#5B6169">How a skill gets written here</text>
+  <text x="40" y="38" font-size="15" font-weight="600" fill="#5B6169">How most of these skills got written</text>
 
   <!-- Step 1: the trigger -->
   <rect x="40" y="62" width="196" height="104" rx="10" fill="#FDF6F5" stroke="#E8D5D2" stroke-width="1.5"/>
