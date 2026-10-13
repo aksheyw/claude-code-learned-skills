@@ -446,16 +446,38 @@ done
 ```
 
 **Check 5: Broken cross-references**
+
+Three rules keep this check honest. Every one of them was added because the naive version
+cried wolf on a real project and trained everyone to ignore the whole scorecard:
+- **Test for EXISTENCE (`-e`), not for a file (`-f`).** A link to a directory (`archive/`,
+  `QA/`) can be legitimate, and `-f` reports every one of them broken.
+- **Strip fenced blocks and `code spans` first.** A doc that TEACHES link syntax by showing
+  `[text](path/to/file.md)` is not carrying a broken link, and neither is a template stub.
+- **Skip anchors, mail and protocol-relative links.**
+
 ```bash
-# Extract relative markdown links and verify each resolves from its source file's dir
-grep -rno --include="*.md" -E '\[[^]]+\]\([^)]+\)' docs/ 2>/dev/null \
-  | grep -v '](http' \
-  | sed -E 's/^([^:]+):[0-9]+:.*\(([^)]+)\)/\1 \2/' \
-  | while read src link; do
-      case "$link" in \#*) continue;; esac
-      [ -f "$(dirname "$src")/${link%%#*}" ] || echo "⚠ BROKEN: $src → $link"
+# Blank out fenced blocks and inline code, then extract only real relative links.
+# A fence closes only on the same character, at least as long, with nothing after it,
+# so a ``` line inside a ```` block does not end the block early.
+find docs -name '*.md' -not -path '*/archive/*' | while read -r src; do
+  awk '
+    { line = $0; sub(/^[ \t]+/, "", line) }
+    !fence && match(line, /^(`{3,}|~{3,})/) { fence = substr(line, 1, RLENGTH); next }
+    fence && match(line, /^(`{3,}|~{3,})[ \t]*$/) {
+      run = substr(line, 1, RLENGTH); sub(/[ \t]+$/, "", run)
+      if (substr(run, 1, 1) == substr(fence, 1, 1) && length(run) >= length(fence)) { fence = ""; next }
+    }
+    !fence' "$src" | sed -E 's/`[^`]*`//g' \
+  | grep -oE '\]\([^)]+\)' | tr -d ']()' \
+  | while read -r link; do
+      case "$link" in \#*|mailto:*|http*|//*) continue;; esac
+      [ -e "$(dirname "$src")/${link%%#*}" ] || echo "⚠ BROKEN: $src → $link"
     done
+done | sort -u
 ```
+
+**Do not "fix" a doc to satisfy this check until you have confirmed the target really is absent
+(`ls -ld`).**
 
 **Check 6: Lessons written to index (not sub-files)**
 ```bash
@@ -505,7 +527,7 @@ Action required: Fix broken link + update test count in CLAUDE.md
 
 ### Integration with End-of-Session Sync (CAPTURE) — optional
 
-**This section is an integration example from the author's workflow.** It assumes conventions that may not exist in your setup: a `/ship` gated-push command, a `/save-session` command, `tasks/session-handoff.md`, and a `memory/` directory. Run the steps whose artifacts exist in your project and skip the rest — the core doc-confluence methodology above does not depend on any of them.
+**This section is an integration example from the author's workflow.** It assumes conventions that may not exist in your setup: a `/ship` gated-push command, a `/save-session` command, `tasks/session-handoff.md`, a `memory/` directory, and a `.claude/wiki/` built with the `llm-wiki` skill in this repo. Run the steps whose artifacts exist in your project and skip the rest — the core doc-confluence methodology above does not depend on any of them.
 
 **Trigger:** Any time the user says "save and sync," "wrap up," "end of session," or similar — treat it as a full context window closure. Run the complete checklist below every time. Never split "save and sync" from "context window closing" — they are the same thing.
 
@@ -520,7 +542,7 @@ Run in this order:
 
 1. npx vitest run
    → flag failures prominently (don't block capture, but note clearly)
-   → update CLAUDE.md test count if changed
+   → update the test count if changed, in the file the project names as its owner (CLAUDE.md by default)
 
 2. git status --short first, then git commit locally
    → show what will be committed BEFORE committing
@@ -537,21 +559,39 @@ Run in this order:
 
 5. /doc-confluence health → fix all red flags
 
-6. Write session memory → memory/sessions/sessions-YYYY-MM-DD.md + MEMORY.md
+6. Wiki sync: ONLY IF `.claude/wiki/` exists in the project. Skip silently if it does not.
+   → scan this session for candidates: bugs fixed with non-obvious root causes, architectural
+     decisions, new gotchas, drift discovered between code and docs
+   → PROPOSE a specific page to update or create, per candidate, and SHOW THE DIFF.
+     The user approves or skips each one. Never auto-commit a wiki edit.
+   → apply the approved edits, add any new page to `.claude/wiki/_index.md`, and append a
+     one-line session entry to `.claude/wiki/_log.md`
+   → run /wiki-lint and fix what it reports
+   → then commit all of it locally as one docs commit, and push it the same way as step 3
+   → ingest bar: capture only NON-OBVIOUS, DURABLE knowledge. If a future session can re-derive it
+     from the code or the git log, skip it.
 
-7. Update CLAUDE.md test count if changed (if not done in step 1)
+7. Write session memory → memory/sessions/sessions-YYYY-MM-DD.md + MEMORY.md
 
-8. Update session-handoff
+8. Update the test count if changed, in the file the project names as its owner (CLAUDE.md by default) (if not done in step 1)
+
+9. Update session-handoff
    → §3: current branch, last commit hash, test count, gates passed this session
    → §4: add today's session entry
    → §5: update primary task for next session
+   → Probe the convention BEFORE writing: `git log -1 -- tasks/session-handoff.md`.
+     If per-session files (`tasks/session-NNN-handoff.md`) exist and the rolling file has not been
+     touched in several sessions, the project is on a per-session convention: write a new file,
+     do not append to the rolling one. Two live handoff conventions are worse than either one,
+     because a stale handoff looks current until someone checks a date. If you find a project
+     running both, say so rather than silently picking one.
 
-9. /save-session → session narrative to ~/.claude/session-data/ (optional — skip if you don't run a session-capture command)
+10. /save-session → session narrative to ~/.claude/session-data/ (optional — skip if you don't run a session-capture command)
 
-10. Gate status report (based on what actually ran this session)
+11. Gate status report (based on what actually ran this session)
 ```
 
-**Gate status report format (step 10):**
+**Gate status report format (step 11):**
 ```
 ## Capture Complete — Gate Status for /ship
 
