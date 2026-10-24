@@ -8,7 +8,8 @@ Audit the project wiki for quality issues. Follow the lint operation from `~/.cl
 ## Steps
 
 1. **Verify wiki exists**
-   - Check `.claude/wiki/_index.md` exists. If not: "No wiki found. Use `/wiki-init` to set one up."
+   - If `.claude/wiki/` does not exist: "No wiki found. Use `/wiki-init` to set one up."
+   - If `.claude/wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
 
 2. **Scan all pages**
    - Read `.claude/wiki/_index.md` for the page catalog

@@ -9,7 +9,8 @@ Capture durable knowledge into the project wiki. Follow the ingest operation fro
 ## Steps
 
 1. **Verify wiki exists**
-   - Check `.claude/wiki/_index.md` exists. If not, suggest running `/wiki-init` first.
+   - If `.claude/wiki/` does not exist, suggest running `/wiki-init` first.
+   - If `.claude/wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
 
 2. **Get source material**
    - If argument provided: read the file or fetch the URL
@@ -28,7 +29,7 @@ Capture durable knowledge into the project wiki. Follow the ingest operation fro
 
 5. **Update index and log**
    - Update `.claude/wiki/_index.md` with any new pages
-   - Add an entry to `.claude/wiki/_log.md`, in the order the file already uses (top if newest-first, otherwise bottom)
+   - Add an entry to `.claude/wiki/_log.md`, in the format and order the file already uses (a dated section if it keeps sections, a table row if it keeps a table; top if newest-first, otherwise bottom)
 
 6. **Report**
    ```

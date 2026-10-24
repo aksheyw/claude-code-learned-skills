@@ -568,8 +568,8 @@ Run in this order:
    → PROPOSE a specific page to update or create, per candidate, and SHOW THE DIFF.
      The user approves or skips each one. Never auto-commit a wiki edit.
    → apply the approved edits, add any new page to `.claude/wiki/_index.md`, and add a
-     one-line session entry to `.claude/wiki/_log.md`, in the order the file already uses
-     (top if newest-first, otherwise bottom)
+     one-line session entry to `.claude/wiki/_log.md`, in the format and order the
+     file already uses (top if newest-first, otherwise bottom)
    → run /wiki-lint and fix what it reports
    → then commit all of it locally as one docs commit, and push it the same way as step 3
    → ingest bar: capture only NON-OBVIOUS, DURABLE knowledge. If a future session can re-derive it
