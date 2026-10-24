@@ -40,6 +40,7 @@ Audit the project wiki for quality issues. Follow the lint operation from `~/.cl
 
    **Check 7 — Frontmatter vocabulary (deterministic):**
    - Run `node ~/.claude/skills/llm-wiki/scripts/frontmatter-vocab-lint.mjs` from the project root and fold its findings into the report (it validates `status`/`confidence` values against the vocabulary declared in `_schema.md`)
+   - If `node --version` fails because Node.js is not installed, skip this check and report it as `Check 7 skipped: Node.js not installed`. Run the other checks as normal. Do not install Node yourself, and do not eyeball the check instead.
 
 4. **Output report**
    ```

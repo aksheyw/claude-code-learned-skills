@@ -110,6 +110,7 @@ Always cite wiki pages using Obsidian `[[...]]` syntax. Cite external files (doc
    node ~/.claude/skills/llm-wiki/scripts/frontmatter-vocab-lint.mjs
    ```
    It reads the legal value set from each `_schema.md` (never hardcoded), scans pages recursively, and classifies each violation (`numeric` / `case-variant` / `annotated` / `off-vocabulary`). Fields a schema declares but never enumerates are reported `not enforced`, never flagged. Flag-only — see Rules. Exit 0 clean / 1 violations / 2 error.
+   If `node --version` fails because Node.js is not installed, skip this check and report it as `Check 7 skipped: Node.js not installed`. Run the other checks as normal. Do not install Node yourself, and do not eyeball the check instead.
 
 ### Output Format
 ```
