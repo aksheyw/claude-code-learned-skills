@@ -19,7 +19,7 @@
    b. If YES: read the page, merge the new info (don't duplicate), update the "Last Updated" date
    c. If NO: create a new page with the standard page template (below)
 4. Update `_index.md` with any new pages or changed descriptions
-5. Append an entry to `_log.md` with: date, operation, pages affected, source
+5. Add an entry to `_log.md` with: date, operation, pages affected, source. Follow the order the file already uses: if its newest entry is at the top, add yours at the top; otherwise append at the bottom
 6. Report what was captured and where
 
 ### Page Template (Obsidian-compatible)
@@ -142,7 +142,7 @@ SUGGESTED FIXES:
 **Purpose:** Set up the wiki for a new project.
 
 ### Process
-1. Create `.claude/wiki/` directory
+1. Create `.claude/wiki/` if it does not exist. Steps 2-4 create a file **only if it does not already exist**. If one does, leave it untouched and report its current state instead (same guard as `/wiki-init`). The folder can exist for other reasons, so check each file on its own.
 2. Create `_schema.md` — auto-detect project type from CLAUDE.md and suggest topic categories
 3. Create `_index.md` — empty catalog with header
 4. Create `_log.md` — empty log with header

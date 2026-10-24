@@ -57,7 +57,7 @@ The systems named below are examples from the author's setup, not dependencies o
 5. **Source everything** — cite the session, file, or conversation where knowledge came from
 6. **Keep _index.md lean** — one line per topic, max 200 lines. If it grows beyond that, reorganize into sub-topics.
 7. **Manual ingest only** — the user/agent decides what's worth capturing. Auto-capture creates noise.
-8. **Don't preload at session start** — use `/wiki-query` on demand to avoid context bloat.
+8. **Don't preload at session start** — use `/wiki-query` on demand to avoid context bloat. One exception: if the project's CLAUDE.md tells you to read a short current-state file (such as `_hot.md`) at session start, read that file. Query everything else on demand.
 9. **Obsidian-compatible** — the wiki should be openable as an Obsidian vault (File → Open folder as vault → `.claude/wiki/`) with graph view working out of the box.
 
 ## Operations Reference

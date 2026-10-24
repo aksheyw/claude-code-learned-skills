@@ -28,7 +28,7 @@ Capture durable knowledge into the project wiki. Follow the ingest operation fro
 
 5. **Update index and log**
    - Update `.claude/wiki/_index.md` with any new pages
-   - Append entry to `.claude/wiki/_log.md`
+   - Add an entry to `.claude/wiki/_log.md`, in the order the file already uses (top if newest-first, otherwise bottom)
 
 6. **Report**
    ```
