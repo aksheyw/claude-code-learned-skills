@@ -394,7 +394,7 @@ Fix every broken reference. Health check will catch any you miss.
 
 ## Mode: `health` — Maintenance Scan
 
-**Run at every session end as part of the mandatory end-of-session sync.**
+**Suited to running at session end, as one step of an end-of-session sync if the project has one** (see the integration section below).
 
 Structural checks only. No running test suites. Completes in < 30 seconds.
 
@@ -529,7 +529,10 @@ Action required: Fix broken link + update test count in CLAUDE.md
 
 **This section is an integration example from the author's workflow.** It assumes conventions that may not exist in your setup: a `/ship` gated-push command, a `/save-session` command, `tasks/session-handoff.md`, a `memory/` directory, and a `.claude/wiki/` built with the `llm-wiki` skill in this repo. Run the steps whose artifacts exist in your project and skip the rest — the core doc-confluence methodology above does not depend on any of them.
 
-**Trigger:** Any time the user says "save and sync," "wrap up," "end of session," or similar — treat it as a full context window closure. Run the complete checklist below every time. Never split "save and sync" from "context window closing" — they are the same thing.
+**Trigger:** Run this checklist only when the project's CLAUDE.md, or the user's own rules, say that "save and sync" (or "wrap up", "end of session") means this full checklist. Steps 2 to 4 commit and push, so the phrase alone is not permission.
+- **The project defines the phrase differently** (for example, "update the two notebook files"): do exactly that and nothing more. No commits or pushes beyond what that definition asks for.
+- **Nothing defines it:** ask the user once which they want before running any step.
+- **The checklist applies:** run all of it every time, and treat "save and sync" and "context window closing" as the same thing.
 
 **CAPTURE ≠ SHIP.** Save and sync is capture only — it never pushes code to main. Code goes to main only via `/ship` (explicit, gated). Docs push immediately (always safe).
 
@@ -564,8 +567,9 @@ Run in this order:
      decisions, new gotchas, drift discovered between code and docs
    → PROPOSE a specific page to update or create, per candidate, and SHOW THE DIFF.
      The user approves or skips each one. Never auto-commit a wiki edit.
-   → apply the approved edits, add any new page to `.claude/wiki/_index.md`, and append a
-     one-line session entry to `.claude/wiki/_log.md`
+   → apply the approved edits, add any new page to `.claude/wiki/_index.md`, and add a
+     one-line session entry to `.claude/wiki/_log.md`, in the order the file already uses
+     (top if newest-first, otherwise bottom)
    → run /wiki-lint and fix what it reports
    → then commit all of it locally as one docs commit, and push it the same way as step 3
    → ingest bar: capture only NON-OBVIOUS, DURABLE knowledge. If a future session can re-derive it
