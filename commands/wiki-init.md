@@ -8,7 +8,8 @@ Set up an LLMwiki for the current project. This creates a `wiki/` directory that
 ## Steps
 
 1. **Check prerequisites**
-   - If `wiki/` does not exist, create it.
+   - If `wiki/` does not exist but `.claude/wiki/` does, the wiki is in its old location: say so, offer to move it with `mv .claude/wiki wiki`, and stop.
+   - If neither exists, create `wiki/`.
    - If it exists, check `_index.md`, `_log.md` and `_schema.md` one at a time. Step 2 creates only the missing ones. Never overwrite or reformat a file that is already there, including a `_hot.md` or `_log.md` kept as a simple two-file notebook. If all three exist, report current state and stop.
    - Read CLAUDE.md to detect project type, name, and tech stack
 

@@ -562,7 +562,7 @@ Run in this order:
 
 5. /doc-confluence health → fix all red flags
 
-6. Wiki sync: ONLY IF `wiki/` exists in the project. Skip silently if it does not.
+6. Wiki sync: ONLY IF `wiki/_index.md` exists in the project. Skip silently if it does not.
    → scan this session for candidates: bugs fixed with non-obvious root causes, architectural
      decisions, new gotchas, drift discovered between code and docs
    → PROPOSE a specific page to update or create, per candidate, and SHOW THE DIFF.

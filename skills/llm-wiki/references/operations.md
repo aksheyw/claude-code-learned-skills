@@ -145,7 +145,7 @@ SUGGESTED FIXES:
 **Purpose:** Set up the wiki for a new project.
 
 ### Process
-1. Create `wiki/` if it does not exist. Steps 2-4 create a file **only if it does not already exist**. If one does, leave it untouched and report its current state instead (same guard as `/wiki-init`). The folder can exist for other reasons, so check each file on its own.
+1. If `wiki/` does not exist but `.claude/wiki/` does, the wiki is in its old location: say so, offer to move it with `mv .claude/wiki wiki`, and stop. Otherwise, create `wiki/` if it does not exist. Steps 2-4 create a file **only if it does not already exist**. If one does, leave it untouched and report its current state instead (same guard as `/wiki-init`). The folder can exist for other reasons, so check each file on its own.
 2. Create `_schema.md` — auto-detect project type from CLAUDE.md and suggest topic categories
 3. Create `_index.md` — empty catalog with header
 4. Create `_log.md` — empty log with header

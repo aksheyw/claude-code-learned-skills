@@ -19,7 +19,7 @@
 // Exit codes: 0 = clean, 1 = violations found, 2 = tool error.
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const FIELDS = ["confidence", "status"];
 const out = (line = "") => process.stdout.write(`${line}\n`);
@@ -159,7 +159,7 @@ const lintPage = (wikiDir, pageName, vocab) => {
 // --- per-wiki orchestration -------------------------------------------------
 
 const projectName = (wikiDir) => {
-  const parts = wikiDir.split("/");
+  const parts = resolve(wikiDir).split("/");
   const idx = parts.lastIndexOf("wiki");
   return idx > 0 ? parts[idx - 1] : wikiDir;
 };
