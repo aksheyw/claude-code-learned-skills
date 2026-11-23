@@ -527,7 +527,7 @@ Action required: Fix broken link + update test count in CLAUDE.md
 
 ### Integration with End-of-Session Sync (CAPTURE) — optional
 
-**This section is an integration example from the author's workflow.** It assumes conventions that may not exist in your setup: a `/ship` gated-push command, a `/save-session` command, `tasks/session-handoff.md`, a `memory/` directory, and a `.claude/wiki/` built with the `llm-wiki` skill in this repo. Run the steps whose artifacts exist in your project and skip the rest — the core doc-confluence methodology above does not depend on any of them.
+**This section is an integration example from the author's workflow.** It assumes conventions that may not exist in your setup: a `/ship` gated-push command, a `/save-session` command, `tasks/session-handoff.md`, a `memory/` directory, and a `wiki/` built with the `llm-wiki` skill in this repo. Run the steps whose artifacts exist in your project and skip the rest — the core doc-confluence methodology above does not depend on any of them.
 
 **Trigger:** Run this checklist only when the project's CLAUDE.md, or the user's own rules, say that "save and sync" (or "wrap up", "end of session") means this full checklist. Steps 2 to 4 commit and push, so the phrase alone is not permission.
 - **The project defines the phrase differently** (for example, "update the two notebook files"): do exactly that and nothing more. No commits or pushes beyond what that definition asks for.
@@ -562,13 +562,13 @@ Run in this order:
 
 5. /doc-confluence health → fix all red flags
 
-6. Wiki sync: ONLY IF `.claude/wiki/` exists in the project. Skip silently if it does not.
+6. Wiki sync: ONLY IF `wiki/` exists in the project. Skip silently if it does not.
    → scan this session for candidates: bugs fixed with non-obvious root causes, architectural
      decisions, new gotchas, drift discovered between code and docs
    → PROPOSE a specific page to update or create, per candidate, and SHOW THE DIFF.
      The user approves or skips each one. Never auto-commit a wiki edit.
-   → apply the approved edits, add any new page to `.claude/wiki/_index.md`, and add a
-     one-line session entry to `.claude/wiki/_log.md`, in the format and order the
+   → apply the approved edits, add any new page to `wiki/_index.md`, and add a
+     one-line session entry to `wiki/_log.md`, in the format and order the
      file already uses (top if newest-first, otherwise bottom)
    → run /wiki-lint and fix what it reports
    → then commit all of it locally as one docs commit, and push it the same way as step 3

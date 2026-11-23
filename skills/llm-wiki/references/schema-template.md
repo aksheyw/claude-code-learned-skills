@@ -81,6 +81,6 @@ The lint script reads the allowed values from this table. Keep the field name in
 
 To view the wiki in Obsidian:
 1. Open Obsidian → File → Open folder as vault
-2. Select `.claude/wiki/` directory
+2. Select `wiki/` directory
 3. Enable Graph View (left sidebar) to see the knowledge graph
 4. Optional plugins: Dataview (for querying frontmatter), Tag Wrangler (tag hierarchy)
