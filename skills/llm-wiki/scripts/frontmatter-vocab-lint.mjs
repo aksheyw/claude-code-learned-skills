@@ -6,7 +6,7 @@
 // freeform status is a judgment call, so violations are reported and classified
 // for human triage only.
 //
-// Source of truth is each project's own `.claude/wiki/_schema.md`: the legal value
+// Source of truth is each project's own `wiki/_schema.md`: the legal value
 // set is parsed from there, never hardcoded. A field with no declared vocabulary in
 // the schema (e.g. a lightweight wiki, or a schema that lists the field name
 // but not its values) is reported as "not enforced", never flagged.
@@ -14,12 +14,12 @@
 // Usage:
 //   node frontmatter-vocab-lint.mjs [--base <dir>] [<wikiDir> ...]
 //     --base <dir>   Base dir holding project folders (default: current directory)
-//     <wikiDir> ...  Explicit `.claude/wiki` dirs to lint (overrides discovery)
+//     <wikiDir> ...  Explicit `wiki` dirs to lint (overrides discovery)
 //
 // Exit codes: 0 = clean, 1 = violations found, 2 = tool error.
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const FIELDS = ["confidence", "status"];
 const out = (line = "") => process.stdout.write(`${line}\n`);
@@ -44,16 +44,16 @@ const parseArgs = (argv) => {
 };
 
 // --- wiki discovery ---------------------------------------------------------
-// Only `<project>/.claude/wiki` at fixed depth — this naturally excludes
-// `<project>/.claude/worktrees/*/.claude/wiki` and nested example snapshots.
+// Only `<project>/wiki` at fixed depth, one level below base. Deeper copies
+// (worktrees, nested example snapshots) are not discovered.
 
 const discoverWikiDirs = (base) => {
   if (!existsSync(base)) throw new Error(`base dir not found: ${base}`);
   // The base itself may BE a project (run from a project root): lint its own
   // wiki first, then fall back to child-project discovery (base holds projects).
-  const ownWiki = join(base, ".claude", "wiki");
+  const ownWiki = join(base, "wiki");
   const children = readdirSync(base)
-    .map((entry) => join(base, entry, ".claude", "wiki"))
+    .map((entry) => join(base, entry, "wiki"))
     .filter((dir) => existsSync(dir) && statSync(dir).isDirectory());
   return existsSync(ownWiki) && statSync(ownWiki).isDirectory()
     ? [ownWiki, ...children]
@@ -159,8 +159,8 @@ const lintPage = (wikiDir, pageName, vocab) => {
 // --- per-wiki orchestration -------------------------------------------------
 
 const projectName = (wikiDir) => {
-  const parts = wikiDir.split("/");
-  const idx = parts.lastIndexOf(".claude");
+  const parts = resolve(wikiDir).split("/");
+  const idx = parts.lastIndexOf("wiki");
   return idx > 0 ? parts[idx - 1] : wikiDir;
 };
 
@@ -246,7 +246,7 @@ const main = () => {
   const { base, explicitDirs } = parseArgs(process.argv.slice(2));
   const wikiDirs = explicitDirs.length > 0 ? explicitDirs : discoverWikiDirs(base);
   if (wikiDirs.length === 0) {
-    out("No `.claude/wiki` directories found.");
+    out("No `wiki` directories found.");
     return 0;
   }
   const results = wikiDirs.map(lintWiki);

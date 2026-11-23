@@ -57,6 +57,8 @@ updated: YYYY-MM-DD
 source: [where knowledge came from]
 tags: [category, subcategory, tech-stack-tag]
 aliases: [alternate names for this topic]
+status: active
+confidence: high
 ---
 ```
 
@@ -66,10 +68,19 @@ Tags follow a `#category/subcategory` hierarchy in Obsidian. Example tags for an
 - `#gotcha/capacitor`
 - `#decision/monetization`
 
+### Allowed values (checked by `/wiki-lint`)
+
+The lint script reads the allowed values from this table. Keep the field name in the first column and each value in backticks. Edit the values to suit the project. Both fields are optional: the lint checks a field only on pages that set it.
+
+| Field | Allowed values |
+|---|---|
+| `status` | `active` `draft` `superseded` `archived` |
+| `confidence` | `high` `medium` `low` |
+
 ## Obsidian Viewing Setup
 
 To view the wiki in Obsidian:
 1. Open Obsidian → File → Open folder as vault
-2. Select `.claude/wiki/` directory
+2. Select `wiki/` directory
 3. Enable Graph View (left sidebar) to see the knowledge graph
 4. Optional plugins: Dataview (for querying frontmatter), Tag Wrangler (tag hierarchy)

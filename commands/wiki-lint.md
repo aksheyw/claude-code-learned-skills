@@ -8,12 +8,13 @@ Audit the project wiki for quality issues. Follow the lint operation from `~/.cl
 ## Steps
 
 1. **Verify wiki exists**
-   - If `.claude/wiki/` does not exist: "No wiki found. Use `/wiki-init` to set one up."
-   - If `.claude/wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
+   - If `wiki/` does not exist but `.claude/wiki/` does, the wiki is in its old location: say so, offer to move it with `mv .claude/wiki wiki`, and stop.
+   - If neither exists: "No wiki found. Use `/wiki-init` to set one up."
+   - If `wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
 
 2. **Scan all pages**
-   - Read `.claude/wiki/_index.md` for the page catalog
-   - Glob `.claude/wiki/**/*.md` to find all pages, including category subfolders (and any not in the index)
+   - Read `wiki/_index.md` for the page catalog
+   - Glob `wiki/**/*.md` to find all pages, including category subfolders (and any not in the index)
    - Read each page
 
 3. **Run all checks**
@@ -28,13 +29,13 @@ Audit the project wiki for quality issues. Follow the lint operation from `~/.cl
    - Flag pages not updated in 30+ days that contain time-sensitive content (API versions, library versions, config values, URLs)
 
    **INFO — Orphans:**
-   - Pages in `.claude/wiki/` not listed in `_index.md`
+   - Pages in `wiki/` not listed in `_index.md`
 
    **INFO — Missing cross-references:**
    - Pages that mention topics covered by other wiki pages but don't link to them
 
    **INFO — Oversized:**
-   - Pages exceeding 150 lines — suggest splitting
+   - Topic pages exceeding 150 lines — suggest splitting. Skip `_`-prefixed files (`_index.md` may run to 200 lines)
 
    **INFO — Empty:**
    - Pages with only the template header, no actual content

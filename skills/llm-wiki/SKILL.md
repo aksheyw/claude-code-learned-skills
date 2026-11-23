@@ -1,7 +1,6 @@
 ---
 name: llm-wiki
 description: Persistent project wiki that compounds knowledge across sessions. Ingest learnings, query past decisions, lint for contradictions. Based on Karpathy's LLMwiki pattern.
-allowed-tools: Read, Write, Edit, Grep, Glob
 ---
 
 # LLMwiki — Persistent Project Knowledge Wiki
@@ -10,11 +9,13 @@ A file-based wiki system that captures durable project knowledge across Claude C
 
 > **Credit:** the core idea (an LLM incrementally building and maintaining a persistent, interlinked wiki that grows richer as knowledge is ingested) is Andrej Karpathy's LLMwiki pattern, from his [gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This skill is an implementation of that pattern for Claude Code.
 
+**Where it lives:** a `wiki/` folder at the project root, next to the other project files, so everyone working on the project can see and open it.
+
 ## When to Use
 
 - **After fixing a non-obvious bug** — capture the root cause so future sessions don't re-investigate
 - **After making an architectural decision** — record the reasoning, not just the choice
-- **After a session with significant learnings** — extract the 3-5 durable insights before they're buried in session data
+- **After a session with significant learnings** — extract up to 5 durable insights before they're buried in session data
 - **When starting a new session** — query the wiki instead of re-reading 30MB of `.jsonl` files
 - **Periodically** — lint the wiki to catch contradictions with current code/docs
 
@@ -22,7 +23,7 @@ A file-based wiki system that captures durable project knowledge across Claude C
 
 | Command | Purpose |
 |---|---|
-| `/wiki-init` | Set up `.claude/wiki/` in current project |
+| `/wiki-init` | Set up `wiki/` in current project |
 | `/wiki-ingest [source]` | Capture learnings into wiki pages |
 | `/wiki-query <question>` | Search wiki and synthesize an answer |
 | `/wiki-lint` | Audit wiki for staleness, contradictions, orphans |
@@ -30,7 +31,7 @@ A file-based wiki system that captures durable project knowledge across Claude C
 ## Wiki Structure (per project)
 
 ```
-<project-root>/.claude/wiki/
+<project-root>/wiki/
   _index.md      # Topic catalog (the brain — kept under 200 lines)
   _log.md        # Chronological audit trail of all changes
   _schema.md     # Project-specific topic categories
@@ -58,7 +59,7 @@ The systems named below are examples from the author's setup, not dependencies o
 6. **Keep _index.md lean** — one line per topic, max 200 lines. If it grows beyond that, reorganize into sub-topics.
 7. **Manual ingest only** — the user/agent decides what's worth capturing. Auto-capture creates noise.
 8. **Don't preload at session start** — use `/wiki-query` on demand to avoid context bloat. One exception: if the project's CLAUDE.md tells you to read a short current-state file (such as `_hot.md`) at session start, read that file. Query everything else on demand.
-9. **Obsidian-compatible** — the wiki should be openable as an Obsidian vault (File → Open folder as vault → `.claude/wiki/`) with graph view working out of the box.
+9. **Obsidian-compatible** — the wiki should be openable as an Obsidian vault (File → Open folder as vault → `wiki/`) with graph view working out of the box.
 
 ## Operations Reference
 

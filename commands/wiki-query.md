@@ -9,12 +9,13 @@ Search the project wiki to answer a question. Follow the query operation from `~
 ## Steps
 
 1. **Verify wiki exists**
-   - If `.claude/wiki/` does not exist: "No wiki found. Use `/wiki-init` to set one up."
-   - If `.claude/wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
+   - If `wiki/` does not exist but `.claude/wiki/` does, the wiki is in its old location: say so, offer to move it with `mv .claude/wiki wiki`, and stop.
+   - If neither exists: "No wiki found. Use `/wiki-init` to set one up."
+   - If `wiki/` exists but has no `_index.md` (for example a two-file notebook of `_hot.md` and `_log.md`), say so and offer to run `/wiki-init`. It adds only the missing files and leaves the existing ones untouched. Do not continue until `_index.md` exists.
 
 2. **Search for relevant pages**
-   - Read `.claude/wiki/_index.md` to scan topic descriptions
-   - Grep `.claude/wiki/` for keywords from the question, excluding `archive/` unless the question concerns history or the user asks to include it
+   - Read `wiki/_index.md` to scan topic descriptions
+   - Grep `wiki/` for keywords from the question, excluding `archive/` unless the question concerns history or the user asks to include it
    - Identify up to 5 most relevant pages
 
 3. **Read and synthesize**
