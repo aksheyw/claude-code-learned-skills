@@ -34,7 +34,7 @@ Audit the project wiki for quality issues. Follow the lint operation from `~/.cl
    - Pages that mention topics covered by other wiki pages but don't link to them
 
    **INFO — Oversized:**
-   - Pages exceeding 150 lines — suggest splitting
+   - Topic pages exceeding 150 lines — suggest splitting. Skip `_`-prefixed files (`_index.md` may run to 200 lines)
 
    **INFO — Empty:**
    - Pages with only the template header, no actual content

@@ -1,7 +1,6 @@
 ---
 name: llm-wiki
 description: Persistent project wiki that compounds knowledge across sessions. Ingest learnings, query past decisions, lint for contradictions. Based on Karpathy's LLMwiki pattern.
-allowed-tools: Read, Write, Edit, Grep, Glob
 ---
 
 # LLMwiki — Persistent Project Knowledge Wiki
@@ -14,7 +13,7 @@ A file-based wiki system that captures durable project knowledge across Claude C
 
 - **After fixing a non-obvious bug** — capture the root cause so future sessions don't re-investigate
 - **After making an architectural decision** — record the reasoning, not just the choice
-- **After a session with significant learnings** — extract the 3-5 durable insights before they're buried in session data
+- **After a session with significant learnings** — extract up to 5 durable insights before they're buried in session data
 - **When starting a new session** — query the wiki instead of re-reading 30MB of `.jsonl` files
 - **Periodically** — lint the wiki to catch contradictions with current code/docs
 
